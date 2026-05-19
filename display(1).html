@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Skydive Signage - Display</title>
+<script src="/socket.io/socket.io.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0a0a0a;
+    color: #ffffff;
+    font-family: Arial, Helvetica, sans-serif;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  #screen {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    display: table;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+  }
+
+  #screen-inner {
+    display: table-cell;
+    vertical-align: middle;
+    padding: 40px 80px;
+  }
+
+  .label {
+    font-size: 22px;
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    color: #888888;
+    margin-bottom: 16px;
+  }
+
+  .headline {
+    font-size: 100px;
+    font-weight: bold;
+    line-height: 1;
+    margin-bottom: 24px;
+  }
+
+  .headline-orange { color: #e87c2a; }
+  .headline-blue   { color: #4a9eff; }
+  .headline-green  { color: #3dd68c; }
+  .headline-red    { color: #f87171; }
+  .headline-white  { color: #ffffff; }
+  .headline-dim    { color: #333333; }
+
+  .subtext {
+    font-size: 28px;
+    color: #aaaaaa;
+    line-height: 1.6;
+  }
+
+  .subtext b { color: #ffffff; }
+
+  .countdown {
+    font-size: 160px;
+    font-weight: bold;
+    color: #ffd166;
+    line-height: 1;
+    margin: 10px 0 16px;
+  }
+
+  .countdown-urgent {
+    color: #e87c2a;
+  }
+
+  .divider {
+    width: 80px;
+    height: 4px;
+    margin: 20px auto;
+  }
+  .divider-orange { background: #e87c2a; }
+  .divider-blue   { background: #4a9eff; }
+  .divider-green  { background: #3dd68c; }
+  .divider-red    { background: #f87171; }
+
+  /* Transport cards - no emoji, just text boxes */
+  .transport-row {
+    display: table;
+    margin: 24px auto 0;
+    border-spacing: 24px 0;
+  }
+
+  .transport-cell { display: table-cell; }
+
+  .transport-card {
+    display: inline-block;
+    padding: 24px 60px;
+    border: 3px solid;
+    font-size: 36px;
+    font-weight: bold;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .card-bus  { border-color: #4a9eff; color: #4a9eff; }
+  .card-car  { border-color: #3dd68c; color: #3dd68c; }
+
+  /* Clock bottom right */
+  #clock {
+    position: fixed;
+    bottom: 20px;
+    right: 30px;
+    font-size: 28px;
+    color: #333333;
+    font-family: Arial, Helvetica, sans-serif;
+  }
+
+  /* Brand top left */
+  #brand {
+    position: fixed;
+    top: 20px;
+    left: 30px;
+    font-size: 18px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: #333333;
+  }
+
+  /* Flash animation for urgent countdown */
+  @keyframes flash {
+    0%   { opacity: 1; }
+    50%  { opacity: 0.4; }
+    100% { opacity: 1; }
+  }
+  .flash { animation: flash 0.8s ease-in-out infinite; }
+</style>
+</head>
+<body>
+
+<div id="brand">SKYDIVE</div>
+<div id="clock">--:--:--</div>
+<div id="screen"><div id="screen-inner"></div></div>
+
+<script>
+var socket = io();
+var countdownInterval = null;
+
+// Clock
+function updateClock() {
+  var now = new Date();
+  var h = String(now.getHours()).padStart(2,'0');
+  var m = String(now.getMinutes()).padStart(2,'0');
+  var s = String(now.getSeconds()).padStart(2,'0');
+  document.getElementById('clock').innerHTML = h + ':' + m + ':' + s;
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+function clearCountdown() {
+  if (countdownInterval) {
+    clearInterval(countdownInterval);
+    countdownInterval = null;
+  }
+}
+
+function startCountdown(seconds) {
+  clearCountdown();
+  var remaining = seconds;
+  function tick() {
+    var el = document.getElementById('cdown');
+    if (!el) return;
+    var m = Math.floor(remaining / 60);
+    var s = remaining % 60;
+    var display = m + ':' + (s < 10 ? '0' : '') + s;
+    el.innerHTML = display;
+    if (remaining <= 60) {
+      el.className = 'countdown countdown-urgent flash';
+    }
+    if (remaining <= 0) {
+      el.innerHTML = 'DONE';
+      clearCountdown();
+      return;
+    }
+    remaining--;
+  }
+  tick();
+  countdownInterval = setInterval(tick, 1000);
+}
+
+function render(msg) {
+  clearCountdown();
+  var t = msg.trip || '';
+  var html = '';
+
+  if (msg.type === 'idle') {
+    html = '<div class="headline headline-dim">WELCOME</div>'
+         + '<div class="divider divider-orange"></div>'
+         + '<div class="subtext">Please check in at the counter</div>';
+
+  } else if (msg.type === 'checkin') {
+    var briefingSecs = (msg.briefingMins || 30) * 60;
+    html = '<div class="label">CHECK-IN NOW OPEN &mdash; ' + t + ' TRIP</div>'
+         + '<div class="subtext" style="margin-bottom:10px;">Safety briefing begins in</div>'
+         + '<div class="countdown" id="cdown">30:00</div>'
+         + '<div class="divider divider-orange"></div>'
+         + '<div class="subtext">Please check in at the counter, then<br>make your way to the <b>briefing room</b> when the timer ends.</div>';
+    setTimeout(function() { startCountdown(briefingSecs); }, 50);
+
+  } else if (msg.type === 'briefing') {
+    html = '<div class="label">SAFETY BRIEFING</div>'
+         + '<div class="headline headline-blue">' + t + ' GROUP</div>'
+         + '<div class="countdown" id="cdown">10:00</div>'
+         + '<div class="subtext">Please make your way to the <b>briefing room</b> now.</div>';
+    setTimeout(function() { startCountdown(10 * 60); }, 50);
+
+  } else if (msg.type === 'finalcheck') {
+    html = '<div class="label">BRIEFING COMPLETE</div>'
+         + '<div class="headline headline-green">' + t + ' GROUP</div>'
+         + '<div class="divider divider-green"></div>'
+         + '<div class="subtext" style="margin-bottom:20px;">Please come to the <b>counter</b> for your final checks.<br>How are you getting to the dropzone?</div>'
+         + '<div class="transport-row">'
+         + '<div class="transport-cell"><div class="transport-card card-bus">BUS</div></div>'
+         + '<div class="transport-cell"><div class="transport-card card-car">DRIVING MYSELF</div></div>'
+         + '</div>';
+
+  } else if (msg.type === 'weather') {
+    html = '<div class="label" style="color:#f87171;">TRIP CANCELLED</div>'
+         + '<div class="headline headline-red">' + t + ' TRIP</div>'
+         + '<div class="divider divider-red"></div>'
+         + '<div class="subtext">This trip has been <b>cancelled due to weather</b>.<br>Please speak to our staff at the counter<br>to reschedule or arrange a refund.</div>';
+  }
+
+  document.getElementById('screen-inner').innerHTML = html;
+}
+
+socket.on('display', render);
+render({ type: 'idle' });
+</script>
+</body>
+</html>
