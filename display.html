@@ -279,6 +279,14 @@ function render(msg) {
           </div>
         </div>
         <div class="body-text" style="margin-top:28px; font-size: clamp(14px,1.8vw,20px);">Tell the staff at the counter which option applies to you</div>`;
+
+    } else if (msg.type === 'weather') {
+      html = `
+        <div style="font-size: clamp(50px,8vw,100px); line-height:1; margin-bottom:20px;">⛈️</div>
+        <div class="eyebrow" style="color:#f87171;">Trip cancelled</div>
+        <div class="headline" style="color:#f87171;">${t} trip</div>
+        <div class="divider" style="background:#f87171;"></div>
+        <div class="body-text">This trip has been <strong style="color:#f87171;">cancelled due to weather</strong>.<br>Please speak to our staff at the counter<br>to reschedule or arrange a refund.</div>`;
     }
 
     screen.innerHTML = html;

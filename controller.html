@@ -289,6 +289,11 @@
       <div><div class="msg-text">Transport check</div><div class="msg-sub">Bus or driving yourself?</div></div>
     </button>
 
+    <button class="msg-btn" onclick="push('weather')">
+      <div class="icon icon-gray">&#x26C8;</div>
+      <div><div class="msg-text" id="lbl-weather">Cancelled due to weather — 7:00am trip</div><div class="msg-sub">Displays weather cancellation notice</div></div>
+    </button>
+
     <button class="msg-btn" onclick="push('idle')">
       <div class="icon icon-gray">&#x2302;</div>
       <div><div class="msg-text">Return to welcome screen</div><div class="msg-sub">Clears the display</div></div>
@@ -340,9 +345,10 @@ function selectedTrip() { return document.getElementById('trip-select').value; }
 
 function updateLabels() {
   const t = selectedTrip();
-  document.getElementById('lbl-checkin').textContent   = `Check-in open — ${t} trip`;
-  document.getElementById('lbl-briefing').textContent  = `Safety briefing — ${t} group`;
+  document.getElementById('lbl-checkin').textContent    = `Check-in open — ${t} trip`;
+  document.getElementById('lbl-briefing').textContent   = `Safety briefing — ${t} group`;
   document.getElementById('lbl-finalcheck').textContent = `Final checks — ${t} group`;
+  document.getElementById('lbl-weather').textContent    = `Cancelled due to weather — ${t} trip`;
 }
 
 function push(type) {
@@ -357,6 +363,7 @@ function push(type) {
     briefing:   `Safety briefing — ${trip}`,
     finalcheck: `Final checks — ${trip}`,
     transport:  'Transport check',
+    weather:    `Cancelled due to weather — ${trip}`,
   };
   document.getElementById('current-msg').textContent = msgs[type] || type;
   const bar = document.getElementById('status-bar');
