@@ -262,12 +262,7 @@ function render(msg) {
         <div class="eyebrow">Briefing complete</div>
         <div class="headline green">${t} group</div>
         <div class="divider green"></div>
-        <div class="body-text">Please come to the <strong>counter</strong> for your final checks.<br>Let us know how you're getting to the dropzone.</div>`;
-
-    } else if (msg.type === 'transport') {
-      html = `
-        <div class="eyebrow">Transport check</div>
-        <div class="headline" style="font-size: clamp(36px,6vw,72px);">How are you getting<br>to the dropzone?</div>
+        <div class="body-text" style="margin-bottom:24px;">Please come to the <strong>counter</strong> for your final checks.<br>Let us know how you're getting to the dropzone:</div>
         <div class="transport-options">
           <div class="transport-card blue-card">
             <div class="icon">🚌</div>
@@ -277,8 +272,7 @@ function render(msg) {
             <div class="icon">🚗</div>
             <div class="label" style="color:var(--green)">Driving myself</div>
           </div>
-        </div>
-        <div class="body-text" style="margin-top:28px; font-size: clamp(14px,1.8vw,20px);">Tell the staff at the counter which option applies to you</div>`;
+        </div>`;
 
     } else if (msg.type === 'weather') {
       html = `
